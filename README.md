@@ -1,21 +1,45 @@
-# Python Learning History
+# hello python Learning History
 
-This repository records my Python learning process before PhD study.
+## About
+
+This repository records my Python learning process before starting PhD study.
+
+The purpose is to build programming skills for computational lithography research.
+
+## Background
+
+- Major: Microelectronics related field
+- Future research direction: Computational Lithography
 
 ## Contents
 
-- basic_exercises:
-  Python syntax and programming practice
+### Basic Exercises
 
-- numpy:
-  Numerical computation practice
+Python syntax and programming practice.
 
-- scipy:
-  Scientific computing practice
+### Scientific Computing
 
-- matplotlib:
-  Data visualization practice
+- NumPy
+- SciPy
+- Matplotlib
+- SymPy
 
-## Purpose
+### Learning Notes
 
-Build programming skills for computational lithography research.
+Daily coding exercises and problem solving.
+
+## Future Plan
+
+This repository will gradually evolve toward:
+
+- image processing
+- computational lithography simulation
+- optimization algorithms
+- machine learning experiments
+
+## Environment
+
+- Python 3.x
+- Conda environment
+- VS Code
+- Git

@@ -13,7 +13,7 @@ threshold=0.30
 dose_list=[0.8,1.0,1.2]
 width_list=[]
 plt.figure(figsize=(10,8))
-for i,dose in enumerate(dose_list):
+for i,dose in enumerate(dose_list):#enumerate() 会在遍历元素的同时，顺便给你元素的编号（索引）
     image_with_dose=dose*aerial_image
     printed_pattern=np.where(image_with_dose>=threshold,1.0,0.0)
     width=np.sum(printed_pattern)*dx

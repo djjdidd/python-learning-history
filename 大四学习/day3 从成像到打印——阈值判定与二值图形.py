@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
+
 x=np.linspace(-2.0,2.0,2000)
 dx=x[1]-x[0]
 mask=np.where(np.abs(x)<=0.25,1.0,0.0)

@@ -40,7 +40,7 @@ def measure_width(binary_pattern):
 # ==============================
 # 6. 先扫描几组剂量，得到 dose-width 数据
 # ==============================
-dose_samples = np.array([0.8, 0.9, 1.0, 1.1, 1.2])
+dose_samples = np.array([0.5,0.6,0.7,0.8, 0.9, 1.0, 1.1, 1.2])
 width_samples = []
 
 for d in dose_samples:
@@ -57,7 +57,7 @@ print("对应线宽:", width_samples)
 # 7. 用插值把离散数据变成更平滑的曲线
 # ==============================
 f_width = interp1d(dose_samples, width_samples, kind='linear')
-dose_fine = np.linspace(0.8, 1.2, 200)
+dose_fine = np.linspace(0.5, 1.2, 200)
 width_fine = f_width(dose_fine)
 
 # ==============================

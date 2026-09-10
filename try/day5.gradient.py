@@ -97,19 +97,13 @@ for i, period in enumerate(period_list):
     image_filtered = np.real(image_filtered)
 
     plt.subplot(2, 2, i+1)
-
-    plt.plot(x, period_mask, label="Mask")
-    plt.plot(x, image_filtered, label="Filtered image")
-
-    plt.xlim(-2, 2)
-    plt.title(f"Period = {period}")
-
-    plt.xlabel("Position")
-    plt.ylabel("Amplitude")
-
-    plt.legend()
+    intensity = np.abs(image_filtered)
+    gradient = np.gradient(intensity, x)
+    plt.plot(x,gradient, label=f"Period={period}")
+    plt.title(f"Filtered Image Gradient for Period = {period}")
+    plt.xlabel("Spatial Position")
+    plt.ylabel("Gradient Magnitude")
     plt.grid(True)
-    intensity = np.abs(image_filtered) ** 2
     
 
 plt.tight_layout()

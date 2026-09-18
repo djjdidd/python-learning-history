@@ -201,8 +201,10 @@ for iteration in range(200):
     loss = loss_function(Z)
 
     loss_history.append(loss)
-
-    
+    print(
+        iteration,
+        "loss =", loss
+    )
 # =========================================================
 # 13. Calculate result after one update
 # =========================================================

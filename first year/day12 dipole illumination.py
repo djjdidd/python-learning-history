@@ -21,8 +21,8 @@ dx = x[1] - x[0]
 # 2. 1D periodic line-space mask
 # =========================================================
 
-period = 0.4      # μm
-line_width = 0.2  # μm
+period = 0.3      # μm
+line_width = 0.15  # μm
 
 position_in_period = np.mod(
     x,
@@ -375,3 +375,119 @@ print(
     "Dipole contrast =",
     contrast_dipole
 )
+# =========================================================
+# 14. NILS comparison
+# =========================================================
+
+# Current line width
+CD = line_width
+
+
+# ---------------------------------------------------------
+# Intensity gradients
+# ---------------------------------------------------------
+
+gradient_normal = np.gradient(
+    intensity_normal_plot,
+    x
+)
+
+gradient_dipole = np.gradient(
+    intensity_dipole_plot,
+    x
+)
+
+
+# ---------------------------------------------------------
+# Choose one design edge
+# ---------------------------------------------------------
+
+# Since one line occupies 0 ~ line_width
+# we choose x = line_width as one design edge
+
+edge_position = line_width
+
+
+# Find the nearest sampled point
+edge_index = np.argmin(
+    np.abs(
+        x - edge_position
+    )
+)
+
+
+# ---------------------------------------------------------
+# Edge intensity
+# ---------------------------------------------------------
+
+I_edge_normal = (
+    intensity_normal_plot[
+        edge_index
+    ]
+)
+
+I_edge_dipole = (
+    intensity_dipole_plot[
+        edge_index
+    ]
+)
+
+
+# ---------------------------------------------------------
+# Edge slope
+# ---------------------------------------------------------
+
+slope_normal = np.abs(
+    gradient_normal[
+        edge_index
+    ]
+)
+
+slope_dipole = np.abs(
+    gradient_dipole[
+        edge_index
+    ]
+)
+
+
+# ---------------------------------------------------------
+# NILS
+# ---------------------------------------------------------
+
+NILS_normal = (
+    CD
+    /
+    I_edge_normal
+    *
+    slope_normal
+)
+
+NILS_dipole = (
+    CD
+    /
+    I_edge_dipole
+    *
+    slope_dipole
+)
+
+
+# ---------------------------------------------------------
+# Print results
+# ---------------------------------------------------------
+
+print()
+print("Edge position =", edge_position, "μm")
+
+print()
+
+print("Normal illumination:")
+print("I_edge =", I_edge_normal)
+print("Slope  =", slope_normal)
+print("NILS   =", NILS_normal)
+
+print()
+
+print("Dipole illumination:")
+print("I_edge =", I_edge_dipole)
+print("Slope  =", slope_dipole)
+print("NILS   =", NILS_dipole)

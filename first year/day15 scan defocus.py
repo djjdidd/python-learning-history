@@ -185,15 +185,11 @@ def imaging_with_defocus(
 # =========================================================
 # 8. Defocus values
 # =========================================================
-
-defocus_list = [
+defocus_scan = np.linspace(
     0.0,
-    1.0,
-    2.0,
-    3.0
-]
-
-
+    4.0,
+    41
+)
 # =========================================================
 # 9. Calculate aerial images
 # =========================================================
@@ -201,7 +197,7 @@ defocus_list = [
 intensity_list = []
 
 
-for defocus_strength in defocus_list:
+for defocus_strength in defocus_scan:
 
     intensity = imaging_with_defocus(
         spectrum,
@@ -260,7 +256,7 @@ plt.figure(
 
 
 for defocus_strength, intensity in zip(
-    defocus_list,
+    defocus_scan,
     intensity_list
 ):
 
@@ -323,7 +319,7 @@ plt.figure(
 )
 
 
-for defocus_strength in defocus_list:
+for defocus_strength in defocus_scan:
 
     pupil = make_defocus_pupil(
         freq,
@@ -557,20 +553,16 @@ target_right_edge = (
     line_width / 2
 )
 
+cd_scan = []
 
-# =========================================================
-# 16. Measure every defocus condition
-# =========================================================
+for defocus_strength in defocus_scan:
 
-cd_list = []
-epe_left_list = []
-epe_right_list = []
-
-
-for defocus_strength, intensity in zip(
-    defocus_list,
-    intensity_list
-):
+    intensity = imaging_with_defocus(
+        spectrum,
+        freq,
+        cutoff,
+        defocus_strength
+    )
 
     (
         printed_cd,
@@ -586,69 +578,17 @@ for defocus_strength, intensity in zip(
         target_right_edge
     )
 
-
-    cd_list.append(
+    cd_scan.append(
         printed_cd
     )
-
-    epe_left_list.append(
-        epe_left
-    )
-
-    epe_right_list.append(
-        epe_right
-    )
-
-
-    print()
-    print(
-        f"Defocus = {defocus_strength}"
-    )
-
-    print(
-        "Printed CD =",
-        printed_cd,
-        "μm"
-    )
-
-    print(
-        "Left EPE =",
-        epe_left * 1000,
-        "nm"
-    )
-
-    print(
-        "Right EPE =",
-        epe_right * 1000,
-        "nm"
-    )
-
-
-# Convert to arrays
-cd_list = np.array(
-    cd_list
+cd_scan = np.array(
+    cd_scan
 )
-
-epe_left_list = np.array(
-    epe_left_list
-)
-
-epe_right_list = np.array(
-    epe_right_list
-)
-
-
-# =========================================================
-# 17. Plot CD vs Defocus
-# =========================================================
-
-plt.figure(
-    figsize=(8, 5)
-)
+plt.figure(figsize=(8, 5))
 
 plt.plot(
-    defocus_list,
-    cd_list * 1000,
+    defocus_scan,
+    cd_scan * 1000,
     marker="o"
 )
 
@@ -657,7 +597,8 @@ plt.axhline(
     linestyle="--",
     label="Target CD"
 )
-
+plt.ylim(
+    130,140)
 plt.xlabel(
     "Defocus Strength"
 )
@@ -675,45 +616,184 @@ plt.legend()
 plt.grid()
 
 plt.show()
+# =========================================================
+# Dose-aware imaging
+# =========================================================
+
+def imaging_with_defocus_and_dose(
+    spectrum,
+    freq,
+    cutoff,
+    defocus_strength,
+    dose
+):
+
+    pupil = make_defocus_pupil(
+        freq,
+        cutoff,
+        defocus_strength
+    )
+
+    filtered_spectrum = (
+        spectrum
+        *
+        pupil
+    )
+
+    field = np.fft.ifft(
+        filtered_spectrum
+    )
+
+    intensity = (
+        np.abs(field) ** 2
+    )
+
+    # Visualization/reference normalization
+    intensity = (
+        intensity
+        /
+        np.max(intensity)
+    )
+
+    # Dose scaling
+    effective_intensity = (
+        dose
+        *
+        intensity
+    )
+
+    return effective_intensity
 
 
 # =========================================================
-# 18. Plot EPE vs Defocus
+# Dose scan at best focus
+# =========================================================
+
+dose_scan = np.linspace(
+    0.5,
+    2.5,
+    61
+)
+
+cd_vs_dose = []
+
+
+for dose in dose_scan:
+
+    intensity = imaging_with_defocus_and_dose(
+        spectrum,
+        freq,
+        cutoff,
+        defocus_strength=0.0,
+        dose=dose
+    )
+
+    (
+        printed_cd,
+        epe_left,
+        epe_right,
+        x_left,
+        x_right
+    ) = measure_cd_epe(
+        x,
+        intensity,
+        threshold,
+        target_left_edge,
+        target_right_edge
+    )
+
+    cd_vs_dose.append(
+        printed_cd
+    )
+
+
+cd_vs_dose = np.array(
+    cd_vs_dose
+)
+
+
+# =========================================================
+# Find nominal dose
+# =========================================================
+
+target_cd = line_width
+
+cd_error = np.abs(
+    cd_vs_dose
+    -
+    target_cd
+)
+
+best_index = np.nanargmin(
+    cd_error
+)
+
+nominal_dose = (
+    dose_scan[
+        best_index
+    ]
+)
+
+nominal_cd = (
+    cd_vs_dose[
+        best_index
+    ]
+)
+
+
+print()
+print("=" * 60)
+
+print(
+    "Nominal dose =",
+    nominal_dose
+)
+
+print(
+    "Printed CD at nominal dose =",
+    nominal_cd * 1000,
+    "nm"
+)
+
+print("=" * 60)
+
+
+# =========================================================
+# Plot CD vs Dose
 # =========================================================
 
 plt.figure(
     figsize=(8, 5)
 )
-
+plt.ylim(100,200)
 plt.plot(
-    defocus_list,
-    epe_left_list * 1000,
-    marker="o",
-    label="Left EPE"
-)
-
-plt.plot(
-    defocus_list,
-    epe_right_list * 1000,
-    marker="o",
-    label="Right EPE"
+    dose_scan,
+    cd_vs_dose * 1000,
+    marker="o"
 )
 
 plt.axhline(
-    0,
-    linestyle="--"
+    target_cd * 1000,
+    linestyle="--",
+    label="Target CD"
+)
+
+plt.axvline(
+    nominal_dose,
+    linestyle="--",
+    label="Nominal Dose"
 )
 
 plt.xlabel(
-    "Defocus Strength"
+    "Dose"
 )
 
 plt.ylabel(
-    "EPE (nm)"
+    "Printed CD (nm)"
 )
 
 plt.title(
-    "EPE vs Defocus"
+    "CD vs Dose at Best Focus"
 )
 
 plt.legend()

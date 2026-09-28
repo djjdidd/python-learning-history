@@ -190,6 +190,13 @@ defocus_scan = np.linspace(
     4.0,
     41
 )
+defocus_list = [
+    0.0,
+    1.0,
+    2.0,
+    3.0,
+    4.0
+]
 # =========================================================
 # 9. Calculate aerial images
 # =========================================================
@@ -256,7 +263,7 @@ plt.figure(
 
 
 for defocus_strength, intensity in zip(
-    defocus_scan,
+    defocus_list,
     intensity_list
 ):
 
@@ -319,7 +326,7 @@ plt.figure(
 )
 
 
-for defocus_strength in defocus_scan:
+for defocus_strength in defocus_list:
 
     pupil = make_defocus_pupil(
         freq,
@@ -584,38 +591,7 @@ for defocus_strength in defocus_scan:
 cd_scan = np.array(
     cd_scan
 )
-plt.figure(figsize=(8, 5))
 
-plt.plot(
-    defocus_scan,
-    cd_scan * 1000,
-    marker="o"
-)
-
-plt.axhline(
-    line_width * 1000,
-    linestyle="--",
-    label="Target CD"
-)
-plt.ylim(
-    130,140)
-plt.xlabel(
-    "Defocus Strength"
-)
-
-plt.ylabel(
-    "Printed CD (nm)"
-)
-
-plt.title(
-    "CD vs Defocus"
-)
-
-plt.legend()
-
-plt.grid()
-
-plt.show()
 # =========================================================
 # Dose-aware imaging
 # =========================================================
@@ -762,30 +738,79 @@ print("=" * 60)
 # Plot CD vs Dose
 # =========================================================
 
-plt.figure(
-    figsize=(8, 5)
-)
-plt.ylim(100,200)
-plt.plot(
-    dose_scan,
-    cd_vs_dose * 1000,
-    marker="o"
+# =========================================================
+# Bossung plot:
+# several doses vs defocus
+# =========================================================
+
+dose_list = [
+    0.9 * nominal_dose,
+    nominal_dose,
+    1.1 * nominal_dose
+]
+
+defocus_scan = np.linspace(
+    0.0,
+    4.0,
+    41
 )
 
+plt.figure(figsize=(9, 6))
+
+
+for dose in dose_list:
+
+    cd_curve = []
+
+    for defocus_strength in defocus_scan:
+
+        intensity = imaging_with_defocus_and_dose(
+            spectrum,
+            freq,
+            cutoff,
+            defocus_strength,
+            dose
+        )
+
+        (
+            printed_cd,
+            epe_left,
+            epe_right,
+            x_left,
+            x_right
+        ) = measure_cd_epe(
+            x,
+            intensity,
+            threshold,
+            target_left_edge,
+            target_right_edge
+        )
+
+        cd_curve.append(
+            printed_cd
+        )
+
+    cd_curve = np.array(
+        cd_curve
+    )
+
+    plt.plot(
+        defocus_scan,
+        cd_curve * 1000,
+        marker="o",
+        label=f"Dose = {dose:.3f}"
+    )
+
+
+# Target CD
 plt.axhline(
     target_cd * 1000,
     linestyle="--",
     label="Target CD"
 )
 
-plt.axvline(
-    nominal_dose,
-    linestyle="--",
-    label="Nominal Dose"
-)
-
 plt.xlabel(
-    "Dose"
+    "Defocus Strength"
 )
 
 plt.ylabel(
@@ -793,7 +818,7 @@ plt.ylabel(
 )
 
 plt.title(
-    "CD vs Dose at Best Focus"
+    "Bossung Plot"
 )
 
 plt.legend()

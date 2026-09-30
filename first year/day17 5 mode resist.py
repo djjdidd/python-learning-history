@@ -597,3 +597,273 @@ print(
     x_right_modes * 1000,
     "nm"
 )
+# =========================================================
+# Measure CD from resist
+# =========================================================
+
+def interpolate_edge(x1, x2, y1, y2, threshold=0.5):
+
+    return (
+        x1
+        +
+        (threshold - y1)
+        /
+        (y2 - y1)
+        *
+        (x2 - x1)
+    )
+
+
+def measure_cd(x, resist, threshold=0.5):
+
+    binary = (resist >= threshold).astype(float)
+
+    transition = np.diff(binary)
+
+    left_edges = np.where(
+        transition == 1
+    )[0]
+
+    right_edges = np.where(
+        transition == -1
+    )[0]
+
+    center_index = np.argmin(
+        np.abs(x)
+    )
+
+    left_candidates = left_edges[
+        left_edges < center_index
+    ]
+
+    right_candidates = right_edges[
+        right_edges > center_index
+    ]
+
+    left_index = left_candidates[-1]
+    right_index = right_candidates[0]
+
+    x_left = interpolate_edge(
+        x[left_index],
+        x[left_index + 1],
+        resist[left_index],
+        resist[left_index + 1],
+        threshold
+    )
+
+    x_right = interpolate_edge(
+        x[right_index],
+        x[right_index + 1],
+        resist[right_index],
+        resist[right_index + 1],
+        threshold
+    )
+
+    cd = x_right - x_left
+
+    return cd, x_left, x_right
+
+
+# =========================================================
+# Full TCC CD
+# =========================================================
+
+cd_full, left_full, right_full = measure_cd(
+    x,
+    resist_full
+)
+
+
+# =========================================================
+# 5-mode CD
+# =========================================================
+
+cd_modes, left_modes, right_modes = measure_cd(
+    x,
+    resist_modes
+)
+
+
+# =========================================================
+# CD error
+# =========================================================
+
+cd_error = cd_modes - cd_full
+
+
+print()
+print("=" * 50)
+print("CD Comparison")
+print("=" * 50)
+
+print(
+    "Full TCC CD =",
+    cd_full * 1000,
+    "nm"
+)
+
+print(
+    "5-mode CD =",
+    cd_modes * 1000,
+    "nm"
+)
+
+print(
+    "CD error =",
+    cd_error * 1000,
+    "nm"
+)
+# =========================================================
+# Scan CD error vs number of coherent modes
+# =========================================================
+
+mode_list = []
+cd_error_list = []
+
+for num_modes in range(1, 9):
+
+    intensity_modes = np.zeros(N)
+
+    for ix, x_value in enumerate(x_fft):
+
+        q = (
+            spectrum
+            *
+            np.exp(
+                1j * 2 * np.pi * freq * x_value
+            )
+        )
+
+        intensity_value = 0.0
+
+        for k in range(num_modes):
+
+            mode_k = eigenvectors[:, k]
+            lambda_k = eigenvalues[k]
+
+            E_k = q @ mode_k
+
+            intensity_value += (
+                lambda_k
+                *
+                np.abs(E_k) ** 2
+            )
+
+        intensity_modes[ix] = (
+            intensity_value / (N ** 2)
+        )
+
+
+    # Use same normalization reference
+    mode_image = (
+        intensity_modes
+        /
+        reference_peak
+    )
+
+
+    # Soft resist
+    resist_modes = soft_resist(
+        mode_image,
+        threshold,
+        beta
+    )
+
+
+    # Measure CD
+    cd_modes, _, _ = measure_cd(
+        x,
+        resist_modes
+    )
+
+
+    # CD error
+    cd_error_nm = (
+        cd_modes - cd_full
+    ) * 1000
+
+
+    mode_list.append(
+        num_modes
+    )
+
+    cd_error_list.append(
+        cd_error_nm
+    )
+
+
+    print(
+        f"Modes = {num_modes}: "
+        f"CD = {cd_modes * 1000:.4f} nm, "
+        f"CD error = {cd_error_nm:.4f} nm"
+    )
+plt.figure(figsize=(8, 5))
+
+plt.plot(
+    mode_list,
+    cd_error_list,
+    marker="o"
+)
+
+plt.axhline(
+    0,
+    linestyle="--"
+)
+
+plt.xlabel(
+    "Number of Coherent Modes"
+)
+
+plt.ylabel(
+    "CD Error (nm)"
+)
+
+plt.title(
+    "CD Error vs Number of Coherent Modes"
+)
+
+plt.grid()
+
+plt.show()
+# =========================================================
+# Automatically choose modes using CD tolerance
+# =========================================================
+
+cd_tolerance_nm = 1.0
+
+selected_modes = None
+
+for num_modes, cd_error_nm in zip(
+    mode_list,
+    cd_error_list
+):
+
+    if abs(cd_error_nm) < cd_tolerance_nm:
+
+        selected_modes = num_modes
+        break
+
+
+print()
+print("=" * 50)
+print("CD-Based Mode Selection")
+print("=" * 50)
+
+print(
+    "CD tolerance =",
+    cd_tolerance_nm,
+    "nm"
+)
+
+if selected_modes is not None:
+
+    print(
+        "Minimum number of modes =",
+        selected_modes
+    )
+
+else:
+
+    print(
+        "No mode number satisfies the CD tolerance."
+    )

@@ -1179,3 +1179,45 @@ plt.grid()
 plt.legend()
 
 plt.show()
+# =========================================================
+# 29. Automatically choose minimum number of modes
+# =========================================================
+
+error_threshold = 0.01   # 1%
+
+selected_modes = None
+
+for num_modes, max_error in zip(
+    mode_number_list,
+    max_error_list
+):
+
+    if max_error < error_threshold:
+
+        selected_modes = num_modes
+
+        break
+
+
+print()
+print("=" * 60)
+print("Automatic Mode Selection")
+print("=" * 60)
+
+print(
+    "Error threshold =",
+    error_threshold
+)
+
+if selected_modes is not None:
+
+    print(
+        "Minimum number of modes =",
+        selected_modes
+    )
+
+else:
+
+    print(
+        "No mode number satisfies the error threshold."
+    )

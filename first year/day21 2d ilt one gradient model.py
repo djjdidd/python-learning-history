@@ -648,3 +648,130 @@ plt.ylabel("y (um)")
 plt.colorbar()
 
 plt.show()
+
+# =========================================================
+# 30. Finite-difference gradient check
+# =========================================================
+
+epsilon_fd = 1e-5
+
+
+# Choose several pixels near/around the feature
+test_pixels = [
+    (50, 50),
+    (60, 60),
+    (64, 64),
+    (70, 70),
+    (80, 80)
+]
+
+
+print()
+print("=" * 60)
+print("2D Gradient Check")
+print("=" * 60)
+
+
+for i, j in test_pixels:
+
+    # -----------------------------------------
+    # Analytical gradient
+    # -----------------------------------------
+
+    analytical_gradient = dL_dZ[
+        i,
+        j
+    ]
+
+
+    # -----------------------------------------
+    # Z + epsilon
+    # -----------------------------------------
+
+    Z_plus = Z.copy()
+
+    Z_plus[
+        i,
+        j
+    ] += epsilon_fd
+
+
+    loss_plus, _, _, _, _ = forward_pass(
+        Z_plus
+    )
+
+
+    # -----------------------------------------
+    # Z - epsilon
+    # -----------------------------------------
+
+    Z_minus = Z.copy()
+
+    Z_minus[
+        i,
+        j
+    ] -= epsilon_fd
+
+
+    loss_minus, _, _, _, _ = forward_pass(
+        Z_minus
+    )
+
+
+    # -----------------------------------------
+    # Finite-difference gradient
+    # -----------------------------------------
+
+    fd_gradient = (
+        loss_plus
+        -
+        loss_minus
+    ) / (
+        2.0
+        *
+        epsilon_fd
+    )
+
+
+    # -----------------------------------------
+    # Relative error
+    # -----------------------------------------
+
+    denominator = max(
+        abs(analytical_gradient),
+        abs(fd_gradient),
+        1e-12
+    )
+
+
+    relative_error = (
+        abs(
+            analytical_gradient
+            -
+            fd_gradient
+        )
+        /
+        denominator
+    )
+
+
+    print(
+        f"Pixel ({i}, {j})"
+    )
+
+    print(
+        "  Analytical =",
+        analytical_gradient
+    )
+
+    print(
+        "  Finite diff =",
+        fd_gradient
+    )
+
+    print(
+        "  Relative error =",
+        relative_error
+    )
+
+    print()

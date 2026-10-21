@@ -73,3 +73,44 @@ loss.backward()
 
 print("\nMask Gradient:")
 print(mask.grad)
+
+# =========================
+# 6. Finite Difference
+# =========================
+
+eps = 1e-4
+
+# 复制两份 Mask
+mask_plus = mask_np.astype(np.float64).copy()
+mask_minus = mask_np.astype(np.float64).copy()
+
+# 只修改第二行、第二列这个像素
+mask_plus[1, 1] += eps
+mask_minus[1, 1] -= eps
+
+# 使用 NumPy 独立计算 Loss
+def compute_loss(M):
+
+    F = np.fft.fft2(M)
+
+    E = np.fft.ifft2(F * pupil_np)
+
+    I = np.abs(E) ** 2
+
+    return np.mean((I - mask_np) ** 2)
+
+
+# 分别计算两次 Loss
+loss_plus = compute_loss(mask_plus)
+loss_minus = compute_loss(mask_minus)
+
+# 利用有限差分估算梯度
+grad_fd = (loss_plus - loss_minus) / (2 * eps)
+
+# 读取 PyTorch 自动计算的梯度
+grad_auto = mask.grad[1, 1].item()
+
+print("\nFinite Difference =", grad_fd)
+print("Autograd =", grad_auto)
+
+print("Difference =", abs(grad_fd - grad_auto))

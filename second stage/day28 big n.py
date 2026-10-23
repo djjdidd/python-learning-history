@@ -364,3 +364,83 @@ for ax, image, title in zip(axes, images, titles):
 
 plt.tight_layout()
 plt.show()
+
+# =========================
+# 17. 提取中心截线
+# =========================
+
+center = N // 2
+
+# 沿 x 方向的中心截线
+target_x = target[:, center]
+
+initial_x = print_initial[:, center]
+
+final_x = print_final[:, center]
+
+# 沿 y 方向的中心截线
+target_y = target[center, :]
+
+initial_y = print_initial[center, :]
+
+final_y = print_final[center, :]
+
+
+# =========================
+# 18. 计算中心截线上的 CD
+# =========================
+
+def calculate_cd(line, dx):
+
+    # 统计截线上值为 1 的像素数量
+    printed_pixels = torch.sum(line).item()
+
+    # 像素数量 × 空间采样间隔
+    cd = printed_pixels * dx
+
+    return cd
+
+
+# Target CD
+target_cdx = calculate_cd(target_x, dx)
+target_cdy = calculate_cd(target_y, dx)
+
+# Initial CD
+initial_cdx = calculate_cd(initial_x, dx)
+initial_cdy = calculate_cd(initial_y, dx)
+
+# Optimized CD
+final_cdx = calculate_cd(final_x, dx)
+final_cdy = calculate_cd(final_y, dx)
+
+
+print("\n===== CD Measurement =====")
+
+print("Target CDx =", target_cdx)
+print("Initial CDx =", initial_cdx)
+print("Final CDx =", final_cdx)
+
+print()
+
+print("Target CDy =", target_cdy)
+print("Initial CDy =", initial_cdy)
+print("Final CDy =", final_cdy)
+
+
+# =========================
+# 19. 计算 CD 误差
+# =========================
+
+initial_error_x = initial_cdx - target_cdx
+final_error_x = final_cdx - target_cdx
+
+initial_error_y = initial_cdy - target_cdy
+final_error_y = final_cdy - target_cdy
+
+print("\n===== CD Error =====")
+
+print("Initial CDx Error =", initial_error_x)
+print("Final CDx Error =", final_error_x)
+
+print("Initial CDy Error =", initial_error_y)
+print("Final CDy Error =", final_error_y)

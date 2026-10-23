@@ -111,3 +111,22 @@ for step in range(5):
 
 print("\nOptimized Mask:")
 print(mask.detach())
+
+
+# =========================
+# 7. 对比优化前后的成像
+# =========================
+
+with torch.no_grad():
+
+    initial_mask = torch.tensor(mask_np)
+
+    I_initial = forward(initial_mask)
+
+    I_final = forward(mask)
+
+print("\nInitial Aerial Image:")
+print(I_initial)
+
+print("\nFinal Aerial Image:")
+print(I_final)

@@ -1,0 +1,4 @@
+# Core dependencies for imaging and optimization exercises
+numpy
+scipy
+matplotlib
